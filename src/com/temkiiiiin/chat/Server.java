@@ -10,14 +10,15 @@ public class Server extends Thread {
     public static void main(String[] args) {
         try {
             ServerSocket serverSocket = new ServerSocket(1234,0,InetAddress.getByName("localhost"));
+            System.out.println("server start");
 
             while (true) {
                 new Server(serverSocket.accept()).start();
+                System.out.println("new client connect");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     private Socket clientSocket;
