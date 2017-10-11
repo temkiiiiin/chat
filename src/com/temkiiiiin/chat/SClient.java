@@ -33,14 +33,23 @@ public class SClient {
         }
     }
 
-    public void send(String message) {
+    public MessageResult send(String message) throws Exception {
         if (message.isEmpty()) {
-            return;
+            throw new Exception("Message is empty");
         }
 
         try {
             outputStream.write(message.getBytes());
+            return new MessageResult(MessageStatus.OK, "");
         } catch (IOException e) {
+            return new MessageResult(MessageStatus.DISCONNECT, "");
+        }
+    }
+
+    public void close() {
+        try {
+            socket.close();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
