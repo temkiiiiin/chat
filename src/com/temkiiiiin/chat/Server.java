@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class Server extends Thread {
     public static void main(String[] args) {
@@ -39,19 +40,26 @@ public class Server extends Thread {
             return;
         }
 
-        while (true) {
+        boolean clientConnected = true;
+
+        while (clientConnected) {
             try {
                 byte[] messageBytes = new byte[1024];
                 int messageLen = inputStream.read(messageBytes);
 
-                if (messageLen == 0) {
-                    return;
+                if (messageLen == -1) {
+                    clientConnected = false;
+                } else {
+                    System.out.println(new String(messageBytes));
                 }
-
-                System.out.println(new String(messageBytes));
+            } catch (SocketException e) {
+                clientConnected = false;
             } catch (Exception e) {
                 e.printStackTrace();
+                clientConnected = false;
             }
         }
+
+        System.out.println("client disconnect");
     }
 }
