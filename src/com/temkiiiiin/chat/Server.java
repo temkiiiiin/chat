@@ -14,49 +14,38 @@ public class Server extends Thread {
             System.out.println("server start");
 
             while (true) {
-                new Server(serverSocket.accept()).start();
-                System.out.println("new client connect");
+                Socket socket = serverSocket.accept();
+                try {
+                    SClient sClient = new SClient(socket, socket.getInputStream(), socket.getOutputStream());
+                    new Server(sClient).start();
+
+                    System.out.println("new client connect");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private Socket clientSocket;
-    private InputStream inputStream;
+    private SClient sClient;
 
-    public Server(Socket clientSoscket) {
-        this.clientSocket = clientSoscket;
-        try {
-            inputStream = clientSoscket.getInputStream();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public Server(SClient sClient) {
+        this.sClient = sClient;
     }
 
     @Override
     public void run() {
-        if (inputStream == null) {
-            return;
-        }
+        boolean connected = true;
 
-        boolean clientConnected = true;
+        while (connected) {
+            MessageResult messageResult = sClient.read();
 
-        while (clientConnected) {
-            try {
-                byte[] messageBytes = new byte[1024];
-                int messageLen = inputStream.read(messageBytes);
-
-                if (messageLen == -1) {
-                    clientConnected = false;
-                } else {
-                    System.out.println(new String(messageBytes));
-                }
-            } catch (SocketException e) {
-                clientConnected = false;
-            } catch (Exception e) {
-                e.printStackTrace();
-                clientConnected = false;
+            if (messageResult.getStatus() == MessageStatus.OK) {
+                System.out.println(messageResult.getText());
+            } else if (messageResult.getStatus() == MessageStatus.DISCONNECT) {
+                connected = false;
             }
         }
 
