@@ -6,6 +6,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server extends Thread {
     public static void main(String[] args) {
@@ -15,9 +17,11 @@ public class Server extends Thread {
 
             while (true) {
                 Socket socket = serverSocket.accept();
+
                 try {
                     SClient sClient = new SClient(socket, socket.getInputStream(), socket.getOutputStream());
                     new Server(sClient).start();
+                    sClients.add(sClient);
 
                     System.out.println("new client connect");
                 } catch (Exception e) {
@@ -28,6 +32,8 @@ public class Server extends Thread {
             e.printStackTrace();
         }
     }
+
+    private static List<SClient> sClients = new ArrayList<>();
 
     private SClient sClient;
 
@@ -44,6 +50,17 @@ public class Server extends Thread {
 
             if (messageResult.getStatus() == MessageStatus.OK) {
                 System.out.println(messageResult.getText());
+
+                for (SClient client: sClients) {
+                    if (!this.sClient.equals(client)) {
+                        try {
+                            client.send(messageResult.getText());
+                        } catch (Exception e) {
+                            sClients.remove(client);
+                            client.close();
+                        }
+                    }
+                }
             } else if (messageResult.getStatus() == MessageStatus.DISCONNECT) {
                 connected = false;
             }
