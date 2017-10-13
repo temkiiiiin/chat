@@ -50,6 +50,7 @@ public class Client extends Thread {
                 }
             } catch (Exception e) {
                 connect = false;
+                e.printStackTrace();
             }
         }
     }

@@ -21,7 +21,9 @@ public class Server extends Thread {
                 try {
                     SClient sClient = new SClient(socket, socket.getInputStream(), socket.getOutputStream());
                     new Server(sClient).start();
-                    sClients.add(sClient);
+                    synchronized (sClients) {
+                        sClients.add(sClient);
+                    }
 
                     System.out.println("new client connect");
                 } catch (Exception e) {
@@ -34,6 +36,7 @@ public class Server extends Thread {
     }
 
     private static List<SClient> sClients = new ArrayList<>();
+    private static List<MessageResult> lastMessages = new ArrayList<>();
 
     private SClient sClient;
 
@@ -50,22 +53,27 @@ public class Server extends Thread {
 
             if (messageResult.getStatus() == MessageStatus.OK) {
                 System.out.println(messageResult.getText());
-
-                for (SClient client: sClients) {
-                    if (!this.sClient.equals(client)) {
-                        try {
-                            client.send(messageResult.getText());
-                        } catch (Exception e) {
-                            sClients.remove(client);
-                            client.close();
-                        }
-                    }
-                }
+                sendToAllUsers(messageResult.getText());
             } else if (messageResult.getStatus() == MessageStatus.DISCONNECT) {
                 connected = false;
             }
         }
 
         System.out.println("client disconnect");
+    }
+
+    private synchronized void sendToAllUsers(String message) {
+        for (SClient client: sClients) {
+            if (this.sClient.equals(client)) {
+                continue;
+            }
+
+            try {
+                client.send(message);
+            } catch (Exception e) {
+                sClients.remove(client);
+                client.close();
+            }
+        }
     }
 }
