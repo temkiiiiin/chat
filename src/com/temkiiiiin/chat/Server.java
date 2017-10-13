@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,13 +18,10 @@ public class Server extends Thread {
 
             while (true) {
                 Socket socket = serverSocket.accept();
-
                 try {
                     SClient sClient = new SClient(socket, socket.getInputStream(), socket.getOutputStream());
                     new Server(sClient).start();
-                    synchronized (sClients) {
-                        sClients.add(sClient);
-                    }
+                    addNewClient(sClient);
 
                     System.out.println("new client connect");
                 } catch (Exception e) {
@@ -35,8 +33,10 @@ public class Server extends Thread {
         }
     }
 
+    private static final int LAST_MESSAGES_COUNT = 10;
+
     private static List<SClient> sClients = new ArrayList<>();
-    private static List<MessageResult> lastMessages = new ArrayList<>();
+    private static ArrayDeque<MessageResult> lastMessages = new ArrayDeque<>(LAST_MESSAGES_COUNT);
 
     private SClient sClient;
 
@@ -49,17 +49,29 @@ public class Server extends Thread {
         boolean connected = true;
 
         while (connected) {
-            MessageResult messageResult = sClient.read();
+            MessageResult messageResult = sClient.receive();
 
             if (messageResult.getStatus() == MessageStatus.OK) {
                 System.out.println(messageResult.getText());
                 sendToAllUsers(messageResult.getText());
+                addNewMessage(messageResult);
             } else if (messageResult.getStatus() == MessageStatus.DISCONNECT) {
                 connected = false;
             }
         }
 
         System.out.println("client disconnect");
+    }
+
+    private synchronized static void addNewClient(SClient sClient) {
+        sClients.add(sClient);
+    }
+
+    private synchronized static void addNewMessage(MessageResult messageResult) {
+        if (lastMessages.size() == LAST_MESSAGES_COUNT) {
+            lastMessages.poll();
+        }
+        lastMessages.add(messageResult);
     }
 
     private synchronized void sendToAllUsers(String message) {

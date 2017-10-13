@@ -46,7 +46,7 @@ public class Client extends Thread {
                 if (messageLen == -1) {
                     connect = false;
                 } else {
-                    System.out.println(new String(messageBytes));
+                    System.out.println(new String(messageBytes, 0, messageLen));
                 }
             } catch (Exception e) {
                 connect = false;

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.SocketException;
 
 public class SClient {
     private Socket socket;
@@ -18,7 +17,7 @@ public class SClient {
         this.outputStream = outputStream;
     }
 
-    public MessageResult read() {
+    public MessageResult receive() {
         byte[] messageBytes = new byte[1024];
         try {
             int messageLen = inputStream.read(messageBytes);
@@ -26,7 +25,7 @@ public class SClient {
             if (messageLen == -1) {
                 return new MessageResult(MessageStatus.DISCONNECT, "");
             } else {
-                return new MessageResult(MessageStatus.OK, new String(messageBytes));
+                return new MessageResult(MessageStatus.OK, new String(messageBytes, 0, messageLen));
             }
         } catch (Exception e) {
             return new MessageResult(MessageStatus.DISCONNECT, "");
