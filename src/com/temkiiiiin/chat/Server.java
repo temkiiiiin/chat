@@ -1,11 +1,12 @@
 package com.temkiiiiin.chat;
 
 
-import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server extends Thread {
     public static void main(String[] args) {
@@ -14,52 +15,88 @@ public class Server extends Thread {
             System.out.println("server start");
 
             while (true) {
-                new Server(serverSocket.accept()).start();
-                System.out.println("new client connect");
+                Socket socket = serverSocket.accept();
+                try {
+                    SClient sClient = new SClient(socket, socket.getInputStream(), socket.getOutputStream());
+                    new Server(sClient).start();
+                    addNewClient(sClient);
+                    sendLastMessages(sClient);
+
+                    System.out.println("new client connect");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private Socket clientSocket;
-    private InputStream inputStream;
+    private static final int LAST_MESSAGES_COUNT = 10;
 
-    public Server(Socket clientSoscket) {
-        this.clientSocket = clientSoscket;
-        try {
-            inputStream = clientSoscket.getInputStream();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private static List<SClient> sClients = new ArrayList<>();
+    private static ArrayDeque<MessageResult> lastMessages = new ArrayDeque<>(LAST_MESSAGES_COUNT);
+
+    private SClient sClient;
+
+    public Server(SClient sClient) {
+        this.sClient = sClient;
     }
 
     @Override
     public void run() {
-        if (inputStream == null) {
-            return;
-        }
+        boolean connected = true;
 
-        boolean clientConnected = true;
+        while (connected) {
+            MessageResult messageResult = sClient.receive();
 
-        while (clientConnected) {
-            try {
-                byte[] messageBytes = new byte[1024];
-                int messageLen = inputStream.read(messageBytes);
-
-                if (messageLen == -1) {
-                    clientConnected = false;
-                } else {
-                    System.out.println(new String(messageBytes));
-                }
-            } catch (SocketException e) {
-                clientConnected = false;
-            } catch (Exception e) {
-                e.printStackTrace();
-                clientConnected = false;
+            if (messageResult.getStatus() == MessageStatus.OK) {
+                System.out.println(messageResult.getText());
+                sendToAllUsers(messageResult.getText());
+                addNewMessage(messageResult);
+            } else if (messageResult.getStatus() == MessageStatus.DISCONNECT) {
+                connected = false;
             }
         }
 
         System.out.println("client disconnect");
+    }
+
+    private synchronized static void addNewClient(SClient sClient) {
+        sClients.add(sClient);
+    }
+
+    private synchronized static void addNewMessage(MessageResult messageResult) {
+        if (lastMessages.size() == LAST_MESSAGES_COUNT) {
+            lastMessages.poll();
+        }
+        lastMessages.add(messageResult);
+    }
+
+    private synchronized void sendToAllUsers(String message) {
+        for (SClient client: sClients) {
+            if (this.sClient.equals(client)) {
+                continue;
+            }
+
+            try {
+                client.send(message);
+            } catch (Exception e) {
+                sClients.remove(client);
+                client.close();
+            }
+        }
+    }
+
+    private synchronized static void sendLastMessages(SClient sClient) {
+        for (MessageResult message : lastMessages) {
+            try {
+                if (sClient.send(message.getText()).getStatus() == MessageStatus.DISCONNECT) {
+                    return;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
