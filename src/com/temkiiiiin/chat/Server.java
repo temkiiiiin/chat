@@ -1,11 +1,9 @@
 package com.temkiiiiin.chat;
 
 
-import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +20,7 @@ public class Server extends Thread {
                     SClient sClient = new SClient(socket, socket.getInputStream(), socket.getOutputStream());
                     new Server(sClient).start();
                     addNewClient(sClient);
+                    sendLastMessages(sClient);
 
                     System.out.println("new client connect");
                 } catch (Exception e) {
@@ -85,6 +84,18 @@ public class Server extends Thread {
             } catch (Exception e) {
                 sClients.remove(client);
                 client.close();
+            }
+        }
+    }
+
+    private synchronized static void sendLastMessages(SClient sClient) {
+        for (MessageResult message : lastMessages) {
+            try {
+                if (sClient.send(message.getText()).getStatus() == MessageStatus.DISCONNECT) {
+                    return;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
