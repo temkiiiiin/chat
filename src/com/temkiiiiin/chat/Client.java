@@ -8,18 +8,30 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class Client extends Thread {
+    private static final String HOST_NAME = "localhost";
+    private static final int PORT = 1234;
+
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        do {
+            System.out.println("Enter your name");
+            name = scanner.nextLine();
+        } while (name.isEmpty());
+
         try {
-            Socket socket = new Socket(InetAddress.getByName("localhost"), 1234);
+            Socket socket = new Socket(InetAddress.getByName(HOST_NAME), PORT);
             OutputStream outputStream = socket.getOutputStream();
             new Client(socket.getInputStream());
 
-            Scanner scanner = new Scanner(System.in);
-
-            String message = "";
+            String message;
             do {
                 message = scanner.nextLine();
-                outputStream.write(message.trim().getBytes());
+                if (message.isEmpty()) {
+                    System.out.println("Message is empty");
+                } else {
+                    outputStream.write((name + ": " + message.trim()).getBytes());
+                }
             } while (!"stop".equals(message.trim()));
 
             socket.close();
@@ -28,6 +40,7 @@ public class Client extends Thread {
         }
     }
 
+    private static String name;
     private InputStream inputStream;
 
     public Client(InputStream inputStream) {
