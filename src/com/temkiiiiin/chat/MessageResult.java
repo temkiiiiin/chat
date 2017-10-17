@@ -3,7 +3,7 @@ package com.temkiiiiin.chat;
 import java.io.*;
 import java.util.Date;
 
-enum MessageStatus{
+enum MessageStatus {
     OK,
     DISCONNECT
 }

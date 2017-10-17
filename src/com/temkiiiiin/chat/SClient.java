@@ -1,6 +1,7 @@
 package com.temkiiiiin.chat;
 
 
+import javax.annotation.processing.Messager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,13 +34,9 @@ public class SClient {
         }
     }
 
-    public MessageResult send(String message) throws Exception {
-        if (message.isEmpty()) {
-            throw new Exception("Message is empty");
-        }
-
+    public MessageResult send(Message message) {
         try {
-            outputStream.write(message.getBytes());
+            outputStream.write(MessageResult.serialize(message));
             return new MessageResult(MessageStatus.OK);
         } catch (IOException e) {
             return new MessageResult(MessageStatus.DISCONNECT);

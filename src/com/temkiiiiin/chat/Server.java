@@ -52,7 +52,8 @@ public class Server extends Thread {
 
             if (messageResult.getStatus() == MessageStatus.OK) {
                 System.out.println(messageResult.getText());
-                sendToAllUsers(messageResult.getText());
+
+                sendToAllUsers(messageResult);
                 addNewMessage(messageResult);
             } else if (messageResult.getStatus() == MessageStatus.DISCONNECT) {
                 connected = false;
@@ -73,7 +74,7 @@ public class Server extends Thread {
         lastMessages.add(messageResult);
     }
 
-    private synchronized void sendToAllUsers(String message) {
+    private synchronized void sendToAllUsers(Message message) {
         for (SClient client: sClients) {
             if (this.sClient.equals(client)) {
                 continue;
@@ -91,7 +92,7 @@ public class Server extends Thread {
     private synchronized static void sendLastMessages(SClient sClient) {
         for (MessageResult message : lastMessages) {
             try {
-                if (sClient.send(message.getText()).getStatus() == MessageStatus.DISCONNECT) {
+                if (sClient.send(message).getStatus() == MessageStatus.DISCONNECT) {
                     return;
                 }
             } catch (Exception e) {

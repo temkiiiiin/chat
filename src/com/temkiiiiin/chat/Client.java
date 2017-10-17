@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Scanner;
 
@@ -60,7 +61,12 @@ public class Client extends Thread {
                 if (messageLen == -1) {
                     connect = false;
                 } else {
-                    System.out.println(new String(messageBytes, 0, messageLen));
+                    try {
+                        MessageResult messageResult = new MessageResult(MessageStatus.OK, MessageResult.deserialise(Arrays.copyOfRange(messageBytes, 0, messageLen)));
+                        System.out.println(messageResult.getName() + ": " + messageResult.getText());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             } catch (Exception e) {
                 connect = false;
