@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Date;
 import java.util.Scanner;
 
 public class Client extends Thread {
@@ -30,7 +31,7 @@ public class Client extends Thread {
                 if (message.isEmpty()) {
                     System.out.println("Message is empty");
                 } else {
-                    outputStream.write((name + ": " + message.trim()).getBytes());
+                    outputStream.write(MessageResult.serialize(new Message(new Date(), name, message.trim())));
                 }
             } while (!"stop".equals(message.trim()));
 

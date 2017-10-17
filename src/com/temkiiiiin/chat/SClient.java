@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class SClient {
     private Socket socket;
@@ -23,12 +24,12 @@ public class SClient {
             int messageLen = inputStream.read(messageBytes);
 
             if (messageLen == -1) {
-                return new MessageResult(MessageStatus.DISCONNECT, "");
+                return new MessageResult(MessageStatus.DISCONNECT);
             } else {
-                return new MessageResult(MessageStatus.OK, new String(messageBytes, 0, messageLen));
+                return new MessageResult(MessageStatus.OK, MessageResult.deserialise(Arrays.copyOfRange(messageBytes, 0, messageLen)));
             }
         } catch (Exception e) {
-            return new MessageResult(MessageStatus.DISCONNECT, "");
+            return new MessageResult(MessageStatus.DISCONNECT);
         }
     }
 
@@ -39,9 +40,9 @@ public class SClient {
 
         try {
             outputStream.write(message.getBytes());
-            return new MessageResult(MessageStatus.OK, "");
+            return new MessageResult(MessageStatus.OK);
         } catch (IOException e) {
-            return new MessageResult(MessageStatus.DISCONNECT, "");
+            return new MessageResult(MessageStatus.DISCONNECT);
         }
     }
 
