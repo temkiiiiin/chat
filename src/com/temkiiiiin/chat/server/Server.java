@@ -1,5 +1,8 @@
-package com.temkiiiiin.chat;
+package com.temkiiiiin.chat.server;
 
+
+import com.temkiiiiin.chat.Message;
+import com.temkiiiiin.chat.MessageResult;
 
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -35,7 +38,7 @@ public class Server extends Thread {
     private static final int LAST_MESSAGES_COUNT = 10;
 
     private static List<SClient> sClients = new ArrayList<>();
-    private static ArrayDeque<MessageResult> lastMessages = new ArrayDeque<>(LAST_MESSAGES_COUNT);
+    private static ArrayDeque<Message> lastMessages = new ArrayDeque<>(LAST_MESSAGES_COUNT);
 
     private SClient sClient;
 
@@ -50,13 +53,14 @@ public class Server extends Thread {
         while (connected) {
             MessageResult messageResult = sClient.receive();
 
-            if (messageResult.getStatus() == MessageStatus.OK) {
-                System.out.println(messageResult.getText());
+            if (messageResult.getStatus() == MessageResult.MessageStatus.OK) {
+                System.out.println(messageResult.getMessage());
 
-                sendToAllUsers(messageResult);
-                addNewMessage(messageResult);
-            } else if (messageResult.getStatus() == MessageStatus.DISCONNECT) {
+                sendToAllUsers(messageResult.getMessage());
+                addNewMessage(messageResult.getMessage());
+            } else if (messageResult.getStatus() == MessageResult.MessageStatus.DISCONNECT) {
                 connected = false;
+                removeClient(sClient);
             }
         }
 
@@ -67,11 +71,15 @@ public class Server extends Thread {
         sClients.add(sClient);
     }
 
-    private synchronized static void addNewMessage(MessageResult messageResult) {
+    private synchronized static void removeClient(SClient sClient) {
+        sClients.remove(sClient);
+    }
+
+    private synchronized static void addNewMessage(Message message) {
         if (lastMessages.size() == LAST_MESSAGES_COUNT) {
             lastMessages.poll();
         }
-        lastMessages.add(messageResult);
+        lastMessages.add(message);
     }
 
     private synchronized void sendToAllUsers(Message message) {
@@ -90,9 +98,9 @@ public class Server extends Thread {
     }
 
     private synchronized static void sendLastMessages(SClient sClient) {
-        for (MessageResult message : lastMessages) {
+        for (Message message : lastMessages) {
             try {
-                if (sClient.send(message).getStatus() == MessageStatus.DISCONNECT) {
+                if (sClient.send(message).getStatus() == MessageResult.MessageStatus.DISCONNECT) {
                     return;
                 }
             } catch (Exception e) {

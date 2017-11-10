@@ -2,6 +2,7 @@ package com.temkiiiiin.chat.client;
 
 
 import com.temkiiiiin.chat.Message;
+import com.temkiiiiin.chat.MessageProcessor;
 import com.temkiiiiin.chat.MessageResult;
 
 import java.io.IOException;
@@ -26,14 +27,17 @@ public class Sender implements Runnable {
             message = scanner.nextLine();
             if (message.isEmpty()) {
                 System.out.println("Message is empty");
+            } else if ("stop".equals(message.trim())) {
+                currentThread.interrupt();
             } else {
                 try {
-                    outputStream.write(MessageResult.serialize(new Message(new Date(), Client.getName(), message.trim())));
+                    MessageProcessor.send(outputStream, new Message(new Date(), Client.getName(), message.trim()));
                 } catch (IOException e) {
                     e.printStackTrace();
                     currentThread.interrupt();
                 }
             }
-        } while (!"stop".equals(message.trim()) && !currentThread.isInterrupted());
+        } while (!currentThread.isInterrupted());
     }
+
 }

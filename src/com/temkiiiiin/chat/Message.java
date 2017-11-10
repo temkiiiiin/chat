@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 public class Message implements Serializable {
+
     private Date date;
     private String name;
     private String text;
@@ -32,4 +33,10 @@ public class Message implements Serializable {
         this.name = name;
         this.text = text;
     }
+
+    @Override
+    public String toString() {
+        return String.valueOf(date.getTime()) + " : " + name + " : " + text;
+    }
+
 }

@@ -2,6 +2,7 @@ package com.temkiiiiin.chat;
 
 
 import java.io.*;
+import java.net.SocketException;
 
 public final class MessageProcessor {
 
@@ -9,7 +10,7 @@ public final class MessageProcessor {
         new ObjectOutputStream(outputStream).writeObject(message);
     }
 
-    public static Message receive(InputStream inputStream) throws IOException, ClassNotFoundException {
+    public static Message receive(InputStream inputStream) throws IOException, ClassNotFoundException, SocketException {
         return (Message)new ObjectInputStream(inputStream).readObject();
     }
 

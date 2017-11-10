@@ -2,8 +2,6 @@ package com.temkiiiiin.chat.client;
 
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Scanner;
@@ -43,11 +41,24 @@ public final class Client {
 
     public static void start() throws IOException {
         socket = new Socket(InetAddress.getByName(HOST_NAME), PORT);
-        OutputStream outputStream = socket.getOutputStream();
-        InputStream inputStream = socket.getInputStream();
 
-        Thread sender = new Thread(new Sender(outputStream));
+        Thread sender = new Thread(new Sender(socket.getOutputStream()));
+        Thread listener = new Thread(new Listener(socket.getInputStream()));
+
         sender.start();
+        listener.start();
+
+        do {
+            if (listener.isInterrupted()) {
+                System.out.println("serever error");
+            }
+        } while (!sender.isInterrupted() && !listener.isInterrupted());
+
+        try {
+            socket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

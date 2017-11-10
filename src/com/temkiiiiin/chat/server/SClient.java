@@ -1,12 +1,14 @@
-package com.temkiiiiin.chat;
+package com.temkiiiiin.chat.server;
 
 
-import javax.annotation.processing.Messager;
+import com.temkiiiiin.chat.Message;
+import com.temkiiiiin.chat.MessageProcessor;
+import com.temkiiiiin.chat.MessageResult;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Arrays;
 
 public class SClient {
     private Socket socket;
@@ -20,26 +22,20 @@ public class SClient {
     }
 
     public MessageResult receive() {
-        byte[] messageBytes = new byte[1024];
         try {
-            int messageLen = inputStream.read(messageBytes);
-
-            if (messageLen == -1) {
-                return new MessageResult(MessageStatus.DISCONNECT);
-            } else {
-                return new MessageResult(MessageStatus.OK, MessageResult.deserialise(Arrays.copyOfRange(messageBytes, 0, messageLen)));
-            }
-        } catch (Exception e) {
-            return new MessageResult(MessageStatus.DISCONNECT);
+            Message message = MessageProcessor.receive(inputStream);
+            return new MessageResult(MessageResult.MessageStatus.OK, message);
+        } catch (IOException | ClassNotFoundException e) {
+            return new MessageResult(MessageResult.MessageStatus.DISCONNECT);
         }
     }
 
     public MessageResult send(Message message) {
         try {
-            outputStream.write(MessageResult.serialize(message));
-            return new MessageResult(MessageStatus.OK);
+            MessageProcessor.send(outputStream, message);
+            return new MessageResult(MessageResult.MessageStatus.OK);
         } catch (IOException e) {
-            return new MessageResult(MessageStatus.DISCONNECT);
+            return new MessageResult(MessageResult.MessageStatus.DISCONNECT);
         }
     }
 
