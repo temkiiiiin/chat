@@ -1,53 +1,34 @@
 package com.temkiiiiin.chat;
 
-import java.io.*;
 import java.util.Date;
 
-enum MessageStatus {
-    OK,
-    DISCONNECT
-}
+public class MessageResult {
 
-public class MessageResult extends Message implements Serializable {
+    public enum  MessageStatus {
+        OK,
+        DISCONNECT
+    }
+
     private MessageStatus status;
+
+    private Message message;
 
     public MessageStatus getStatus() {
         return status;
     }
 
+    public Message getMessage() {
+        return message;
+    }
+
     public MessageResult(MessageStatus status) {
-        super();
         this.status = status;
+        this.message = null;
     }
 
     public MessageResult(MessageStatus status, Message message) {
-        super(message.getDate(), message.getName(), message.getText());
         this.status = status;
+        this.message = message;
     }
 
-    public MessageResult(MessageStatus status, Date date, String name, String text) {
-        super(date, name, text);
-        this.status = status;
-    }
-
-    public static byte[] serialize(Message message) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(message);
-            return baos.toByteArray();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return new byte[] {};
-    }
-
-    public static Message deserialise(byte[] data) {
-        ByteArrayInputStream bais = new ByteArrayInputStream(data);
-        try (ObjectInputStream ois = new ObjectInputStream(bais)) {
-            return (Message)ois.readObject();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 }
