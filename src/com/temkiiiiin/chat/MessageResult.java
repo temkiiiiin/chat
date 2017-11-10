@@ -1,24 +1,34 @@
 package com.temkiiiiin.chat;
 
-enum MessageStatus{
-    OK,
-    DISCONNECT
-}
+import java.util.Date;
 
 public class MessageResult {
+
+    public enum  MessageStatus {
+        OK,
+        DISCONNECT
+    }
+
     private MessageStatus status;
-    private String text;
+
+    private Message message;
 
     public MessageStatus getStatus() {
         return status;
     }
 
-    public String getText() {
-        return text;
+    public Message getMessage() {
+        return message;
     }
 
-    public MessageResult(MessageStatus status, String text) {
+    public MessageResult(MessageStatus status) {
         this.status = status;
-        this.text = text;
+        this.message = null;
     }
+
+    public MessageResult(MessageStatus status, Message message) {
+        this.status = status;
+        this.message = message;
+    }
+
 }
